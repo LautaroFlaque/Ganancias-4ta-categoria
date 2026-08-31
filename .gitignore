@@ -1,0 +1,35 @@
+# --- Datos de contribuyentes: NUNCA versionar ---
+# Recibos, exportaciones de ARCA (Mis Aportes / Mis Retenciones), SiRADIG,
+# liquidadores oficiales con datos cargados, planillas de casos reales.
+*.xlsm
+datos*.csv
+!ejemplo/datos_ejemplo.csv
+/casos/
+/privado/
+*_privado.*
+*Villacorta*
+*recibo*
+*aguinaldo*
+*Historico*
+*IMP_RET*
+*presentacion*
+Percepciones*.csv
+
+# --- Salidas generadas ---
+ejemplo/ejemplo_salida.xlsx
+Control_*.xlsx
+*.tmp
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# --- Editores / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+~$*
