@@ -15,10 +15,6 @@ oficiales de Ganancias 4ª categoría y permite:
 - estimar el **saldo de la DDJJ / liquidación anual**,
 - correr **escenarios** (agregar/quitar deducciones, cambiar la modalidad de pago, etc.).
 
-> ⚠️ **Este repositorio no contiene datos de contribuyentes.** Los recibos, las
-> exportaciones de ARCA y las planillas de casos reales quedan fuera de git (ver
-> `.gitignore`). Sólo se versiona la herramienta y los parámetros públicos del período
-> fiscal (escalas y deducciones publicadas por ARCA).
 
 ---
 
@@ -168,7 +164,3 @@ oficial de Ganancias 4ª categoría:
 
 ---
 
-## Aviso
-
-Herramienta de apoyo. No reemplaza el liquidador oficial ni el criterio profesional.
-Verificar siempre montos y plazos contra los sistemas de ARCA antes de tomar decisiones.
