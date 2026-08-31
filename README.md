@@ -267,5 +267,3 @@ lo que aporta el cliente (recibos de sueldo y respaldo de deducciones).
 - Paso siguiente: **parsers** que normalicen esas descargas directo al formato del CSV, para
   que armar un caso sea "pegar las credenciales → planilla".
 
----
-
