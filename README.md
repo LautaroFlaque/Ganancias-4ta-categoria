@@ -225,21 +225,47 @@ oficial de Ganancias 4ª categoría:
 
 ---
 
-## Flujo de trabajo típico para un caso real (fuera de git)
+## Datos de entrada de un caso real
 
-1. **Reunir fuentes** (van a una carpeta privada, nunca al repo):
-   - histórico *"Mis Aportes"* de ARCA → remuneración bruta y aportes devengados mes a mes;
-   - *"Mis Retenciones"* (IMP_RET) de ARCA → retenciones/devoluciones reales por recibo;
-   - recibos de sueldo → separar básico / SAC / bonos, confirmar fechas de pago;
-   - presentaciones de **SiRADIG (F.572)** → qué deducciones declaró el empleado y desde cuándo;
-   - liquidador oficial de Ganancias 4ª del período.
-2. **Extraer parámetros** del liquidador → `python extraer_parametros.py <liquidador.xlsm>`.
-3. **Armar el CSV** del caso (un recibo por fila, criterio percibido: el primer recibo del
-   período es el sueldo de diciembre anterior cobrado en enero).
-4. **Correr** `armar_planilla.py` → planilla con *Resumen* (teórico vs real), *Datos* y *Parámetros*.
-5. **Analizar**: la diferencia acumulada entre impuesto determinado y retención real es el
-   saldo estimado de la DDJJ; contrastar contra las deducciones del SiRADIG para explicar
-   cada devolución/retención.
+Todos van a una carpeta privada, **nunca al repo**. Cada fuente alimenta una parte del CSV:
+
+| Fuente | Origen | Qué aporta | Columnas del CSV |
+|---|---|---|---|
+| Histórico **"Mis Aportes"** | Portal ARCA (Clave Fiscal) | Remuneración bruta y aportes (jubilación / obra social) mes a mes | `remun`, `aporte_real` |
+| **"Mis Retenciones"** (SICORE) | Portal ARCA | Retenciones y devoluciones reales por recibo, con fecha | `ret_informada` |
+| **Recibos de sueldo** | Cliente / empleador | Separar básico, SAC y bonos; fecha de pago (define el primer recibo del período) | `remun`, `sac`, `no_computable` |
+| Presentaciones de **SiRADIG (F.572)** | Portal ARCA | Deducciones declaradas y desde cuándo: alquiler, cargas de familia, aportes a SGR, cuota médica, etc. | `alq_beneficio`, `cajas_compl`, `ded_grales_otras`, `conyuge` / `hijos` / `hijo_incap` |
+| Liquidador oficial de Ganancias 4ª | Publicación anual | Sólo si hay que regenerar `params.json` para un período nuevo | — |
+
+**Mínimo indispensable:** Mis Aportes + Mis Retenciones + SiRADIG cubren la comparación
+teórico vs. real. Los recibos afinan SAC, bonos y fechas.
+
+### Pasos
+
+1. Reunir las fuentes en la carpeta privada.
+2. `python extraer_parametros.py <liquidador.xlsm>` si cambió el período fiscal.
+3. Armar el CSV (un recibo por fila; criterio percibido: el primer recibo del período es el
+   sueldo de diciembre anterior cobrado en enero).
+4. `python armar_planilla.py <caso.csv> <control.xlsx>` → planilla *Resumen* / *Datos* / *Parámetros*.
+5. Analizar: la diferencia acumulada entre impuesto determinado y retención real es el saldo
+   estimado de la DDJJ; se contrasta contra el SiRADIG para explicar cada retención o devolución.
+
+---
+
+## Roadmap
+
+Hoy los tres archivos de ARCA (Mis Aportes, Mis Retenciones, SiRADIG) se descargan **a mano**
+desde el portal. El objetivo es **automatizar esa descarga**, dejando como entrada manual sólo
+lo que aporta el cliente (recibos de sueldo y respaldo de deducciones).
+
+- ARCA **no expone API pública** para los servicios a nivel contribuyente (Mis Aportes, Mis
+  Retenciones, SiRADIG). Sí hay web services oficiales para padrón / constancia de inscripción
+  y facturación electrónica (autenticación WSAA con certificado), que no cubren estos datos.
+- Vía prevista: **scraper autenticado** con Clave Fiscal (Playwright / Selenium) que reproduzca
+  la descarga de los mismos `.xls` / PDF, contemplando el 2FA y los términos de uso del portal.
+  El contador accede con la relación delegada del cliente ("Administrador de Relaciones").
+- Paso siguiente: **parsers** que normalicen esas descargas directo al formato del CSV, para
+  que armar un caso sea "pegar las credenciales → planilla".
 
 ---
 
