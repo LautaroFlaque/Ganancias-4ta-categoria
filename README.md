@@ -36,36 +36,115 @@ normativa/
 
 ---
 
-## Uso rápido
+## Empezar (paso a paso)
+
+### Requisitos
+
+- **Python 3.10 o superior** (`python --version`). En Windows, instalá desde
+  [python.org](https://www.python.org/downloads/) marcando *"Add Python to PATH"*.
+- Git (sólo si vas a clonar en vez de bajar el ZIP).
+
+### 1. Obtener el código
 
 ```bash
-pip install -r requirements.txt
-
-# 1) Correr el ejemplo sintético
-cd ejemplo && python correr_ejemplo.py
-
-# 2) Armar una planilla desde tu propio CSV (formato en armar_planilla.py)
-cd src
-python armar_planilla.py  ../privado/mi_caso.csv  ../privado/control.xlsx  --mes-en-curso
-
-# 3) Re-generar params.json desde un liquidador oficial nuevo
-python extraer_parametros.py  "ruta/al/Liquidador_Ganancias_4ta.xlsm"
+git clone https://github.com/LautaroFlaque/Ganancias-4ta-categoria.git
+cd Ganancias-4ta-categoria
 ```
 
-Uso del motor desde Python:
+*(o desde GitHub: botón verde **Code → Download ZIP** y descomprimir.)*
+
+### 2. Instalar las dependencias
+
+```bash
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+*(El `venv` es opcional pero recomendado. Sin él, `pip install -r requirements.txt` a secas también funciona.)*
+
+### 3. Probar que anda (ejemplo con datos sintéticos)
+
+```bash
+cd ejemplo
+python correr_ejemplo.py
+```
+
+Debería imprimir una tabla de liquidación de 12 recibos y generar `ejemplo/ejemplo_salida.xlsx`.
+Los datos del ejemplo son inventados (`datos_ejemplo.csv`): sueldo 6.000.000/mes, alquiler 40 %
+de 300.000/mes, SAC en junio y diciembre.
+
+### 4. Usarlo con un caso propio
+
+1. Creá una carpeta para tus datos (git la ignora):
+   ```bash
+   mkdir privado
+   ```
+2. Copiá `ejemplo/datos_ejemplo.csv` a `privado/mi_caso.csv` y completá **una fila por recibo**
+   (delimitador `;`, números en formato `1.234.567,89` o `1234567.89`). Columnas:
+
+   | columna | qué va | vacío = |
+   |---|---|---|
+   | `remun` | remuneración bruta del recibo (sin SAC) | 0 |
+   | `sac` | SAC efectivamente cobrado en ese recibo | 0 |
+   | `no_computable` | conceptos exentos / no computables (en positivo) | 0 |
+   | `aporte_real` | aporte jub+PAMI+OS real del recibo | usa 17 % s/ tope |
+   | `sindical` / `otros_desc` | otros descuentos computables | 0 |
+   | `alq_beneficio` | beneficio alquiler 40 % de ese recibo | 0 |
+   | `ded_grales_otras` | otras deducciones generales del SiRADIG (ya con tope) | 0 |
+   | `cajas_compl` | incremento de aportes a SGR / cajas de ese recibo | 0 |
+   | `conyuge` / `hijos` / `hijo_incap` | cantidad de cargas de familia | 0 |
+   | `ret_informada` | retención real de ARCA de ese recibo | usa la teórica |
+
+3. Generá la planilla:
+   ```bash
+   cd ../src
+   python armar_planilla.py  ../privado/mi_caso.csv  ../privado/control.xlsx  --mes-en-curso
+   ```
+   Opciones: `--mes-siguiente` (el recibo del mes M se paga en M+1), `--con-prorrateo-sac`,
+   `--aportes-tope`, `--conyuge` / `--hijos` / `--hijo-incap` (habilitan esas cargas).
+
+4. Abrí `privado/control.xlsx`. Hoja **Resumen**: recibo por recibo, retención **teórica** vs
+   **real** (columna `ret_informada`) y la diferencia. La suma de esa diferencia es el saldo
+   estimado de la liquidación anual / DDJJ.
+
+### 5. Para otro período fiscal
+
+`params.json` trae los valores de **2026**. Para otro año necesitás el liquidador oficial de
+Ganancias 4ª de ese período y:
+
+```bash
+cd src
+python extraer_parametros.py  "ruta/al/Liquidador_Ganancias_4ta_<año>.xlsm"
+```
+
+Eso reescribe `params.json` y lo verifica contra los PDFs de `normativa/` (reemplazá también
+esos PDFs por los del período nuevo).
+
+---
+
+## Uso del motor desde Python
 
 ```python
+import sys; sys.path.insert(0, "src")
 from engine import liquidar, tabla
 
 datos = dict(
     remun=[6_000_000]*12,          # remuneración bruta de cada recibo
     alq_beneficio=[300_000]*12,    # beneficio alquiler 40% (Art. 85 inc. h)
     ret_informada=[None]*12,       # retención real de cada recibo (None = usar la teórica)
-    # ... resto de campos: ver docstring de liquidar()
+    # ... resto de campos: ver el docstring de liquidar()
 )
 res = liquidar(datos, modalidad_mes_siguiente=False, sac_prorrateo=False)
-tabla(res)
+tabla(res)                          # imprime la tabla
+print(res[7]["imp_det"])            # impuesto determinado acumulado al 8º recibo
 ```
+
+Cada elemento de `res` es un `dict` con todos los subtotales de ese recibo.
 
 ---
 
