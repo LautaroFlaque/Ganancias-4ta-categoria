@@ -113,7 +113,7 @@ de 300.000/mes, SAC en junio y diciembre.
 
 ### 5. Para otro período fiscal
 
-`params.json` trae los valores de **2026**. Para otro año necesitás el liquidador oficial de
+`params.json` trae los valores de **2026**. Para otro año se necesita el papel de trabajo de
 Ganancias 4ª de ese período y:
 
 ```bash
